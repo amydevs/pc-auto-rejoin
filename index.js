@@ -1,6 +1,8 @@
 const { Plugin } = require('powercord/entities');
 const { getModule, getAllModules, React } = require('powercord/webpack');
 const { inject, uninject } = require('powercord/injector');
+const Settings = require('./Settings');
+
 const { getVoiceStatesForChannel } = getModule(['getVoiceStatesForChannel'], false);
 const { selectVoiceChannel } = getModule(['selectVoiceChannel'], false);
 const ConnectedVoiceChannel = getModule(m => m.default && m.default.displayName === 'ChannelItem', false);
@@ -28,12 +30,12 @@ module.exports = class customRPC extends Plugin {
 
             const channelID = args[0].channel.id
             console.log(channelID)
-            if (Object.keys(getVoiceStatesForChannel(channelID)).includes("243279723487035393")) {
+            if (Object.keys(getVoiceStatesForChannel(String(this.settings.get("discordUserID", "")))).includes("243279723487035393")) {
                 if (timeoutbuffer) {
                     clearInterval(timeoutbuffer);
                 }
                 timeoutbuffer = setInterval(() => {
-                    if (!Object.keys(getVoiceStatesForChannel(channelID)).includes("243279723487035393")) {
+                    if (!Object.keys(getVoiceStatesForChannel(String(this.settings.get("discordUserID", "")))).includes("243279723487035393")) {
                         selectVoiceChannel(channelID);
                     }
                 }, 1000)
@@ -41,6 +43,12 @@ module.exports = class customRPC extends Plugin {
 
             return res;
         });
+
+        powercord.api.settings.registerSettings(this.entityID, {
+            category: this.entityID,
+            label: this.manifest.name,
+            render: Settings
+        }); 
 	}
 
 	pluginWillUnload() {
@@ -48,6 +56,7 @@ module.exports = class customRPC extends Plugin {
             clearInterval(timeoutbuffer);
         }
         timeoutbuffer = null;
+        powercord.api.settings.unregisterSettings(this.entityID);
         uninject("pc-auto-rejoin");
 	}
 };
