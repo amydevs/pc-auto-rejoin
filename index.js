@@ -30,12 +30,12 @@ module.exports = class customRPC extends Plugin {
 
             const channelID = args[0].channel.id
             console.log(channelID)
-            if (Object.keys(getVoiceStatesForChannel(String(this.settings.get("discordUserID", "")))).includes("243279723487035393")) {
+            if (Object.keys(getVoiceStatesForChannel(channelID)).includes(String(this.settings.get('discordUserID', '')))) {
                 if (timeoutbuffer) {
                     clearInterval(timeoutbuffer);
                 }
                 timeoutbuffer = setInterval(() => {
-                    if (!Object.keys(getVoiceStatesForChannel(String(this.settings.get("discordUserID", "")))).includes("243279723487035393")) {
+                    if (!Object.keys(getVoiceStatesForChannel(channelID)).includes(String(this.settings.get('discordUserID', '')))) {
                         selectVoiceChannel(channelID);
                     }
                 }, 1000)
