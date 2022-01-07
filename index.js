@@ -1,8 +1,9 @@
 const { Plugin } = require('powercord/entities');
 const { getModule, getAllModules, React } = require('powercord/webpack');
 const { inject, uninject } = require('powercord/injector');
-const { findInReactTree, getOwnerInstance } = require('powercord/util');
-const path = require('path');
+const { getVoiceStatesForChannel } = getModule(['getVoiceStatesForChannel'], false);
+const { selectVoiceChannel } = getModule(['selectVoiceChannel'], false);
+const ConnectedVoiceChannel = getModule(m => m.default && m.default.displayName === 'ChannelItem', false);
 
 const { SET_ACTIVITY } = getModule(['SET_ACTIVITY'], false);
 const defaults = {
@@ -18,16 +19,9 @@ module.exports = class customRPC extends Plugin {
 		
 	}
 
-	async startPlugin() {
-        console.log("hif")
-
-        const { getVoiceStatesForChannel } = await getModule(['getVoiceStatesForChannel']);
-        const { selectVoiceChannel } = await getModule(['selectVoiceChannel']);
-        
-
-        const ConnectedVoiceChannel = await getModule(m => m.default && m.default.displayName === 'ChannelItem');
-
-        const renderCount = (args, res) => {
+	startPlugin() {
+        console.log("hif")      
+        inject('pc-auto-rejoin', ConnectedVoiceChannel, 'default', (args, res) => {
             console.log("detect change in vc!")
 
             if (!args[0].channel.isGuildVoice()) return res;
@@ -46,8 +40,7 @@ module.exports = class customRPC extends Plugin {
             }
 
             return res;
-        };
-        inject('pc-auto-rejoin', ConnectedVoiceChannel, 'default', renderCount);
+        });
 	}
 
 	pluginWillUnload() {
