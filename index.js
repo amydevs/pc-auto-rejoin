@@ -8,7 +8,7 @@ const { SET_ACTIVITY } = getModule(['SET_ACTIVITY'], false);
 const defaults = {
 };
 
-let channelIDBuffer = null;
+let timeoutbuffer = null;
 
 module.exports = class customRPC extends Plugin {
 	reloadRPC() {
@@ -22,7 +22,8 @@ module.exports = class customRPC extends Plugin {
         console.log("hif")
 
         const { getVoiceStatesForChannel } = await getModule(['getVoiceStatesForChannel']);
-        const { selectVoiceChannel } = await getModule([ 'selectVoiceChannel' ]);
+        const { selectVoiceChannel } = await getModule(['selectVoiceChannel']);
+        
 
         const ConnectedVoiceChannel = await getModule(m => m.default && m.default.displayName === 'ChannelItem');
 
@@ -31,16 +32,18 @@ module.exports = class customRPC extends Plugin {
 
             if (!args[0].channel.isGuildVoice()) return res;
 
-            if (Object.keys(getVoiceStatesForChannel(args[0].channel.id)).includes("243279723487035393")) {
-                channelIDBuffer = args[0].channel.id;
-                console.log("got it!")
-            }
-
-            else {
-                if (channelIDBuffer) {
-                    selectVoiceChannel(channelIDBuffer);
+            const channelID = args[0].channel.id
+            console.log(channelID)
+            if (Object.keys(getVoiceStatesForChannel(channelID)).includes("243279723487035393")) {
+                if (timeoutbuffer) {
+                    clearInterval(timeoutbuffer);
                 }
-            }            
+                timeoutbuffer = setInterval(() => {
+                    if (!Object.keys(getVoiceStatesForChannel(channelID)).includes("243279723487035393")) {
+                        selectVoiceChannel(channelID);
+                    }
+                }, 1000)
+            }
 
             return res;
         };
@@ -48,6 +51,10 @@ module.exports = class customRPC extends Plugin {
 	}
 
 	pluginWillUnload() {
+        if (timeoutbuffer) {
+            clearInterval(timeoutbuffer);
+        }
+        timeoutbuffer = null;
         uninject("pc-auto-rejoin");
 	}
 };
